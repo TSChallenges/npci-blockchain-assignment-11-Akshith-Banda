@@ -1,9 +1,10 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	
+
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -23,6 +24,11 @@ type LetterOfCredit struct {
 	History          []string `json:"history"`
 }
 
+type LOCStatus struct {
+	Status string `json:"status"`
+	Owner  string `json:"owner"`
+}
+
 // SmartContract provides functions for managing the Letter of Credit
 type SmartContract struct {
 	contractapi.Contract
@@ -40,10 +46,245 @@ func (s *SmartContract) RequestLOC(ctx contractapi.TransactionContextInterface, 
 	// Verify caller is TataMotors
 	// Create new LoC with status "Requested"
 	// Add to history
+
+	if buyer != "TataMotors" {
+		return fmt.Errorf("unverified buyer")
+	}
+	loc := &LetterOfCredit{
+		LOCID:            locID,
+		Buyer:            buyer,
+		Seller:           seller,
+		IssuingBank:      issuingBank,
+		AdvisingBank:     advisingBank,
+		Amount:           amount,
+		Currency:         currency,
+		ExpiryDate:       expiryDate,
+		GoodsDescription: goodsDescription,
+		Status:           "Requested",
+		History:          []string{"Tata motors requested LOC"},
+		DocumentHashes:   []string{},
+	}
+
+	locbytes, err := json.Marshal(loc)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // TODO: Implement other functions here (IssueLOC, AcceptLOC, etc.)
+func (s *SmartContract) IssueLOC(ctx contractapi.TransactionContextInterface, locID string) error {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return err
+	}
+
+	loc.Status = "Issued"
+	loc.History = append(loc.History, "Letter od credit issued")
+
+	locbytes, err = json.Marshal(loc)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (s *SmartContract) AcceptLOC(ctx contractapi.TransactionContextInterface, locID string) error {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return err
+	}
+
+	loc.Status = "Accepted"
+	loc.History = append(loc.History, "Letter of credit accepted")
+
+	locbytes, err = json.Marshal(loc)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SmartContract) RejectLOC(ctx contractapi.TransactionContextInterface, locID string) error {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return err
+	}
+
+	loc.Status = "Rejected"
+	loc.History = append(loc.History, "Letter of credit is rejected")
+
+	locbytes, err = json.Marshal(loc)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SmartContract) ShipGoods(ctx contractapi.TransactionContextInterface, locID string) error {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return err
+	}
+
+	loc.Status = "Shipped"
+	loc.History = append(loc.History, "Shipped Goods")
+
+	h := sha256.New()
+	h.Write([]byte("docs of shipment from tesla"))
+	h.Sum(nil)
+	loc.DocumentHashes = append(loc.DocumentHashes, string(h.Sum(nil)))
+
+	locbytes, err = json.Marshal(loc)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SmartContract) VerifyDocuments(ctx contractapi.TransactionContextInterface, locID string) error {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return err
+	}
+
+	loc.Status = "Verified"
+	loc.History = append(loc.History, "verified documents")
+
+	locbytes, err = json.Marshal(loc)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SmartContract) ReleasePayment(ctx contractapi.TransactionContextInterface, locID string) error {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return err
+	}
+
+	loc.Status = "Paid"
+	loc.History = append(loc.History, "paid the amount")
+
+	locbytes, err = json.Marshal(loc)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SmartContract) GetLOCHistory(ctx contractapi.TransactionContextInterface, locID string) ([]string, error) {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return nil, err
+	}
+
+	return loc.History, nil
+}
+
+func (s *SmartContract) GetLOCStatus(ctx contractapi.TransactionContextInterface, locID string) (*LOCStatus, error) {
+	var loc LetterOfCredit
+	locbytes, err := ctx.GetStub().GetState(locID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(locbytes, &loc)
+	if err != nil {
+		return nil, err
+	}
+
+	status := &LOCStatus{
+		Status: loc.Status,
+		Owner:  loc.Buyer,
+	}
+
+	return status, nil
+}
 
 func main() {
 	chaincode, err := contractapi.NewChaincode(&SmartContract{})
