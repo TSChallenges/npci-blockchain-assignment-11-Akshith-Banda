@@ -1,0 +1,9 @@
+export FABRIC_CFG_PATH=/workspaces/npci-blockchain-assignment-11-Akshith-Banda/fabric-samples/config
+
+export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_LOCALMSPID="TataMotorsMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=/workspaces/npci-blockchain-assignment-11-Akshith-Banda/fabric-samples/test-network/organizations/peerOrganizations/tatamotors.example.com/peers/peer0.tatamotors.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=/workspaces/npci-blockchain-assignment-11-Akshith-Banda/fabric-samples/test-network/organizations/peerOrganizations/tatamotors.example.com/users/Admin@tatamotors.example.com/msp
+export CORE_PEER_ADDRESS=localhost:7051
+
+peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile "/workspaces/npci-blockchain-assignment-11-Akshith-Banda/fabric-samples/test-network/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" -C locchannel -n loc --peerAddresses localhost:7051 --tlsRootCertFiles "/workspaces/npci-blockchain-assignment-11-Akshith-Banda/fabric-samples/test-network/organizations/peerOrganizations/tatamotors.example.com/peers/peer0.tatamotors.example.com/tls/ca.crt" --peerAddresses localhost:9051 --tlsRootCertFiles "/workspaces/npci-blockchain-assignment-11-Akshith-Banda/fabric-samples/test-network/organizations/peerOrganizations/icici.example.com/peers/peer0.icici.example.com/tls/ca.crt" --peerAddresses localhost:8051 --tlsRootCertFiles "/workspaces/npci-blockchain-assignment-11-Akshith-Banda/fabric-samples/test-network/organizations/peerOrganizations/tesla.example.com/peers/peer0.tesla.example.com/tls/ca.crt"  -c '{"function":"RequestLOC","Args":["loc123", "TataMotors", "Tesla", "ICICI", "Chase", "100000", "dollar", "31/05/2025", "engine parts"]}'

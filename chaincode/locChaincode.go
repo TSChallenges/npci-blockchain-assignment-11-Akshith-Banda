@@ -47,6 +47,15 @@ func (s *SmartContract) RequestLOC(ctx contractapi.TransactionContextInterface, 
 	// Create new LoC with status "Requested"
 	// Add to history
 
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client msp id")
+	}
+
+	if clientMSP != "TataMotorsMSP" {
+		return fmt.Errorf("unauthorized to request LOC only tata motors can request it")
+	}
+
 	if buyer != "TataMotors" {
 		return fmt.Errorf("unverified buyer")
 	}
@@ -75,11 +84,26 @@ func (s *SmartContract) RequestLOC(ctx contractapi.TransactionContextInterface, 
 		return err
 	}
 
+	err = ctx.GetStub().SetEvent("LOC_ISSUED", locbytes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // TODO: Implement other functions here (IssueLOC, AcceptLOC, etc.)
 func (s *SmartContract) IssueLOC(ctx contractapi.TransactionContextInterface, locID string) error {
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client msp id")
+	}
+
+	if clientMSP != "IciciMSP" {
+		return fmt.Errorf("unauthorized to issue LOC only icici bank can issue it")
+	}
+
 	var loc LetterOfCredit
 	locbytes, err := ctx.GetStub().GetState(locID)
 	if err != nil {
@@ -107,6 +131,16 @@ func (s *SmartContract) IssueLOC(ctx contractapi.TransactionContextInterface, lo
 	return nil
 }
 func (s *SmartContract) AcceptLOC(ctx contractapi.TransactionContextInterface, locID string) error {
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client msp id")
+	}
+
+	if clientMSP != "TeslaMSP" {
+		return fmt.Errorf("unauthorized to accept LOC only tesla can accept it")
+	}
+
 	var loc LetterOfCredit
 	locbytes, err := ctx.GetStub().GetState(locID)
 	if err != nil {
@@ -135,6 +169,16 @@ func (s *SmartContract) AcceptLOC(ctx contractapi.TransactionContextInterface, l
 }
 
 func (s *SmartContract) RejectLOC(ctx contractapi.TransactionContextInterface, locID string) error {
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client msp id")
+	}
+
+	if clientMSP != "TeslaMSP" {
+		return fmt.Errorf("unauthorized to reject LOC only tesla can reject it")
+	}
+
 	var loc LetterOfCredit
 	locbytes, err := ctx.GetStub().GetState(locID)
 	if err != nil {
@@ -163,6 +207,16 @@ func (s *SmartContract) RejectLOC(ctx contractapi.TransactionContextInterface, l
 }
 
 func (s *SmartContract) ShipGoods(ctx contractapi.TransactionContextInterface, locID string) error {
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client msp id")
+	}
+
+	if clientMSP != "TeslaMSP" {
+		return fmt.Errorf("unauthorized to ship goods only tesla can ship goods")
+	}
+
 	var loc LetterOfCredit
 	locbytes, err := ctx.GetStub().GetState(locID)
 	if err != nil {
@@ -192,10 +246,25 @@ func (s *SmartContract) ShipGoods(ctx contractapi.TransactionContextInterface, l
 		return err
 	}
 
+	err = ctx.GetStub().SetEvent("GOODS_SHIPPED", locbytes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *SmartContract) VerifyDocuments(ctx contractapi.TransactionContextInterface, locID string) error {
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client msp id")
+	}
+
+	if clientMSP != "ChaseMSP" {
+		return fmt.Errorf("unauthorized to verify only chase bank can ship goods")
+	}
+
 	var loc LetterOfCredit
 	locbytes, err := ctx.GetStub().GetState(locID)
 	if err != nil {
@@ -220,10 +289,25 @@ func (s *SmartContract) VerifyDocuments(ctx contractapi.TransactionContextInterf
 		return err
 	}
 
+	err = ctx.GetStub().SetEvent("DOCUMENTS_VERIFIED", locbytes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *SmartContract) ReleasePayment(ctx contractapi.TransactionContextInterface, locID string) error {
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client msp id")
+	}
+
+	if clientMSP != "IciciMSP" {
+		return fmt.Errorf("unauthorized to release payment only icici bank can release it")
+	}
+
 	var loc LetterOfCredit
 	locbytes, err := ctx.GetStub().GetState(locID)
 	if err != nil {
@@ -244,6 +328,11 @@ func (s *SmartContract) ReleasePayment(ctx contractapi.TransactionContextInterfa
 	}
 
 	err = ctx.GetStub().PutState(locID, locbytes)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().SetEvent("PAYMENT_RELEASED", locbytes)
 	if err != nil {
 		return err
 	}
